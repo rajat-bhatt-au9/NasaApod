@@ -60,11 +60,13 @@ body {
 @media (max-width: 1280px) {
   .nasa-photo {
     display: block;
+    border: 2px solid #26ff55;
   }
 
   .nasa-photo img {
     width: 100%;
     margin-right: 0;
+
     margin-bottom: 30px;
   }
 }
@@ -91,4 +93,19 @@ body {
 .home-link:hover {
   border-radius: 5px;
   background: #26ff55;
+}
+
+.filter {
+  text-align: center;
+  color: #fd5d5d;
+}
+.filter > span {
+  font-size: 25px;
+}
+
+.datepicker {
+  color: #222222;
+  background-color: white;
+  margin-top: 20px;
+  margin-left: 5px;
 }

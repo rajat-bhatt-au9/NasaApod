@@ -1,59 +1,126 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import NavBar from "./NavBar";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
+import "react-calendar/dist/Calendar.css";
+import DatePicker from "react-date-picker";
 
 
-export default function NasaPhoto() {
-  const [photoData, setPhotoData] = useState(null);
-  
+class NasaPhoto extends React.Component{
 
-  useEffect(() => {
-    fetchPhoto();
-
-    async function fetchPhoto() {
-      const res = await fetch(
-        'https://api.nasa.gov/planetary/apod?api_key=xbfqGUDCRGcPG92J0eLBjSx6dooQfYCuldA1grwN'
-      );
-      const data = await res.json();
-      setPhotoData(data);
-      console.log(data);
+    constructor(){
+        super();
+        this.state = {
+            copyright: null,
+            date: null,
+            explanation: null,
+            hdurl: null,
+            title: null,
+            url: null,
+            errormsg: null,
+            showhd: false,
+        };
     }
-  }, []);
 
+    componentDidMount() {
+        this.fetchAPOD();
+    }
+    
+    fetchAPOD = async (queryparam = "") => {
+        try {
+            const url = 'https://api.nasa.gov/planetary/apod';
+            const apikey = 'xbfqGUDCRGcPG92J0eLBjSx6dooQfYCuldA1grwN';
+            const apodurl = `${url}?api_key=${apikey}${queryparam}`;
+            const response = await fetch(apodurl);
+            const data = await response.json();
+            if (data.error === undefined && data.code === undefined) {
+            this.setState({
+                copyright: data.copyright,
+                date: data.date,
+                explanation: data.explanation,
+                hdurl: data.hdurl,
+                title: data.title,
+                url: data.url,
+                media_type: data.media_type,
+            });
+            } else if (data.error !== undefined) {
+            this.setState({
+                errormsg: data.error.message,
+            });
+            } else if (data.code !== undefined) {
+            this.setState({
+                errormsg: data.msg,
+            });
+            }
+        } catch (error) {}
+    };
 
-  if (!photoData) return <div />;
+    fetchAPODOnDate = (date) => {
+        const month = parseInt(date.getMonth()) + 1;
+        const userdate = `${date.getFullYear()}-${month}-${date.getDate()}`;
+        const queryparam = `&date=${userdate}`;
+        this.fetchAPOD(queryparam);
+      };
 
-  return (
-    <>
-    <NavBar />
+    showURLImage = (url) => {
+        if (url !== null) {
+          if (this.state.media_type==="image") {
+            return (
+                <img
+                src={url}
+                alt={this.state.title}
+                className="photo"
+              />
+            );
+          } else {
+            return (
+                <iframe
+                title="space-video"
+                src={this.state.url}
+                frameBorder="0"
+                gesture="media"
+                allow="encrypted-media"
+                allowFullScreen
+                className="photo"
+              />
+            );
+          }
+        } else {
+          return <div></div>;
+        }
+    };
 
+    render(){
 
-    <div className="nasa-photo">
+        return (
+            <>
+                <NavBar />
+                
+                <div className="filter">
+                    <span>Pick a date:</span>
+                    <DatePicker
+                        clearIcon={null}
+                        format="yyyy-MM-dd"
+                        minDate={new Date("Jun 16, 1995")}
+                        maxDate={new Date()}
+                        onChange={this.fetchAPODOnDate}
+                        value={this.state.date ? new Date(this.state.date) : new Date()}
+                        className="datepicker"
+                    />
+                </div>
+            
+                <div className="nasa-photo">
+        
+                    {this.showURLImage(this.state.url)}
 
-      {photoData.media_type === "image" ? (
-        <img
-          src={photoData.url}
-          alt={photoData.title}
-          className="photo"
-        />
-      ) : (
-        <iframe
-          title="space-video"
-          src={photoData.url}
-          frameBorder="0"
-          gesture="media"
-          allow="encrypted-media"
-          allowFullScreen
-          className="photo"
-        />
-      )}
-      <div>
-        <h1>{photoData.title}</h1>
-        <p className="date">{photoData.date}</p>
-        <p className="explanation">{photoData.explanation}</p>
-      </div>
-    </div>
-    </>
-  );
+                    <div>
+                        <h1>{this.state.title}</h1>
+                        <p className="date">{this.state.date}</p>
+                        <p className="explanation">{this.state.explanation}</p>
+                    </div>
+                </div>
+            </>
+          );
+
+    }
 }
+
+export default NasaPhoto;
